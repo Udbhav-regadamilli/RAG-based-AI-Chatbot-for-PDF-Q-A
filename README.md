@@ -1,25 +1,25 @@
 # RAG PDF Q&A Pipeline
 
-A simple Retrieval-Augmented Generation (RAG) demo that:
-
-- extracts text from a PDF
-- chunks the text into overlapping sentence windows
-- builds vector embeddings
-- indexes vectors with FAISS
-- answers user-style questions using Gemini based on retrieved chunks
+A Retrieval-Augmented Generation (RAG) system that:
+- Extracts text from PDFs using PyMuPDF
+- Chunks text into overlapping sentence windows
+- Generates embeddings with sentence-transformers
+- Indexes embeddings with FAISS for fast similarity search
+- Reranks retrieved chunks using a cross-encoder model
+- Answers user questions using Ollama (llama3) based on retrieved context
 
 ## Project Structure
 
-- `main.py` - runs the full pipeline
-- `utilites/file_operations.py` - PDF text extraction with PyMuPDF
-- `utilites/rag_operations.py` - chunking, embeddings, FAISS indexing, similarity search
-- `utilites/qa.py` - Gemini answer generation from retrieved context
-- `data/` - sample PDFs
+- `main.py` - Main pipeline that accepts PDF file paths as command-line arguments
+- `utilites/file_operations.py` - PDF text extraction using PyMuPDF (fitz)
+- `utilites/rag_operations.py` - Sentence-based chunking, embedding generation, FAISS indexing, similarity search, and chunk reranking
+- `utilites/qa.py` - Answer generation using Ollama with llama3 model
+- `data/` - Sample PDF files for demonstration
 
 ## Requirements
 
 - Python 3.12+
-- A valid `GOOGLE_API_KEY` for Gemini
+- Ollama running locally on `http://localhost:11434` with the `llama3` model available
 
 ## Install
 
@@ -38,63 +38,95 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -U pip
 pip install -e .
-pip install faiss-cpu python-dotenv
 ```
 
 > Notes:
-> - `faiss` and `python-dotenv` are used by the code and may need to be installed depending on your environment.
-> - NLTK tokenizer data is downloaded automatically at runtime by `utilites/rag_operations.py`.
+> - Dependencies are specified in `pyproject.toml`
+> - NLTK tokenizer data (`punkt_tab`) is downloaded automatically at runtime by `utilites/rag_operations.py`
+> - Sentence-transformers and cross-encoder models are downloaded on first use
 
 ## Environment Setup
 
-Create a `.env` file in the project root:
+Ensure Ollama is running locally:
 
-```env
-GOOGLE_API_KEY=your_google_api_key_here
+```powershell
+ollama serve
 ```
+
+In another terminal, pull the llama3 model if not already available:
+
+```powershell
+ollama pull llama3
+```
+
+No additional `.env` file is required for this version.
 
 ## Run
 
+Run the pipeline with one or more PDF file paths as arguments:
+
 ```powershell
-python .\main.py
+python .\main.py ".\data\Python_Tutorial_EDIT.pdf"
 ```
 
-By default, the script reads:
+Or process multiple PDFs:
 
-- `./data/Python_Tutorial_EDIT.pdf`
+```powershell
+python .\main.py ".\data\Python_Tutorial_EDIT.pdf" ".\data\Udbhav_Full_Stack_Resume.pdf"
+```
 
-To use another PDF, update `file_path` in `main.py`.
+The script will process each file sequentially and present an interactive prompt for each PDF where you can ask questions.
 
-## What the pipeline does
+## Pipeline Overview
 
-1. Extracts PDF text.
-2. Splits text into sentence chunks (`chunk_size=5`, `overlap=1`).
-3. Generates embeddings with `all-MiniLM-L6-v2`.
-4. Builds a FAISS L2 index.
-5. Runs example queries and generates answers using Gemini.
+For each PDF file provided:
+
+1. **Extract** - Extracts all text from the PDF using PyMuPDF
+2. **Chunk** - Splits text into sentence-based chunks (`chunk_size=5`, `overlap=1`)
+3. **Embed** - Generates embeddings for each chunk using `all-MiniLM-L6-v2` model from sentence-transformers
+4. **Index** - Builds a FAISS L2 index for fast similarity search
+5. **Query Loop** - For each user query:
+   - Generates embedding for the query
+   - Retrieves top-10 similar chunks using FAISS
+   - Reranks the top-10 chunks using `cross-encoder/ms-marco-MiniLM-L-6-v2`
+   - Selects top-5 reranked chunks
+   - Generates answer using Ollama (llama3) with the context and query
 
 ## Troubleshooting
 
-- If you get API/auth errors:
-  - verify `GOOGLE_API_KEY` is set correctly
-  - check network access
-- If `faiss` import fails:
-  - install `faiss-cpu`
-- If tokenizer errors appear:
-  - rerun once and allow NLTK download
-- If model calls fail intermittently:
-  - retry; the code already tries fallback Gemini models
+- **Connection refused on port 11434:**
+  - Ensure Ollama is running: `ollama serve` in a separate terminal
+  - Check if llama3 model is available: `ollama pull llama3`
+
+- **NLTK tokenizer errors:**
+  - Rerun the script; it automatically downloads `punkt_tab` on first use
+
+- **Embedding model download errors:**
+  - Check internet connection; sentence-transformers downloads models on first use
+  - Models are cached locally after first download
+
+- **FAISS import fails:**
+  - Ensure `faiss-cpu` is installed: `pip install faiss-cpu>=1.13.2`
+
+- **Memory errors with large PDFs:**
+  - The entire PDF is processed in memory; try with smaller PDFs first
+  - Adjust `chunk_size` and `overlap` in `rag_operations.py` if needed
 
 ## Limitations
 
-- This is a script-style prototype (not yet a packaged CLI/service).
-- Query list is hardcoded in `main.py`.
-- No persistent vector store yet; index is rebuilt every run.
+- Script-style interface (not a packaged service/API)
+- Interactive query loop per PDF (one file at a time)
+- FAISS index rebuilt on every run (no persistence)
+- Entire PDF must fit in memory
+- Fixed chunking parameters and model selection
 
-## Next Improvements
+## Future Improvements
 
-- Add CLI args for file path and query input
-- Persist and reload FAISS index
-- Add tests for chunking and retrieval quality
-- Improve prompt template and source attribution
-
+- Batch query input from file instead of interactive loop
+- Persist FAISS index to disk for faster subsequent runs
+- Add tests for chunking, retrieval quality, and answer accuracy
+- Improve answer source attribution with page/chunk references
+- Support for other LLM backends (Ollama alternatives, API-based models)
+- Configurable chunking strategy and model selection
+- Streaming responses for long answers
+- Multi-document context aggregation
