@@ -1,13 +1,12 @@
 import nltk
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 import faiss
 import numpy as np
 
 nltk.download('punkt_tab')
-
-from dotenv import load_dotenv
-
-load_dotenv()
+# Load once
+model = SentenceTransformer("all-MiniLM-L6-v2")
+reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 def chunk_text_sentences(text, chunk_size=5, overlap=1):
     """
@@ -40,7 +39,6 @@ def chunk_text_sentences(text, chunk_size=5, overlap=1):
     return chunks
 
 def generate_embeddings(chunks):
-    model = SentenceTransformer("all-MiniLM-L6-v2")
     embeddings = model.encode(chunks)
     return embeddings
 
@@ -62,6 +60,25 @@ def create_faiss_index(embeddings):
     index.add(embeddings_np)
 
     return index, embeddings_np
+
+
+def ranking_chunks(query, chunks, top_k=2):
+    """
+    Rerank retrieved chunks based on relevance to query
+    """
+
+    pairs = [[query, chunk] for chunk in chunks]
+
+    scores = reranker.predict(pairs)
+
+    # Combine chunks with scores
+    scored_chunks = list(zip(chunks, scores))
+
+    # Sort by score (descending)
+    scored_chunks.sort(key=lambda x: x[1], reverse=True)
+
+    # Return top_k chunks
+    return [chunk for chunk, _ in scored_chunks[:top_k]]
 
 
 def search_similar(index, query_embedding, chunks, k=3):

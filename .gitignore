@@ -9,3 +9,21 @@ wheels/
 # Virtual environments
 .venv
 .env
+
+# IDE files
+.idea
+.vscode
+
+# Python version management
+.python-version
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# testing data
+test_data/
+data/
