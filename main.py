@@ -1,34 +1,29 @@
-from utilites.file_operations import extract_text_from_pdf
+import sys
+
+from utilites.pre_processing import is_data_preprocessed, pre_processing
 from utilites.qa import generate_answer
-from utilites.rag_operations import chunk_text_sentences, generate_embeddings, create_faiss_index, search_similar
+from utilites.rag_operations import ranking_chunks
 
 
 def rag_pipeline(file_path):
-    print("Rag pipeline")
-    print("Extracting text from PDF...")
-    pdf_text = extract_text_from_pdf(file_path)
-    print("Generating chunks from the extracted text...")
-    chunks = chunk_text_sentences(pdf_text)
-    print("Generating embeddings...")
-    embeddings = generate_embeddings(chunks)
-    print("Creating FAISS index...")
-    index, embeddings_np = create_faiss_index(embeddings)
-    print("FAISS index created successfully.")
-    print("------------------------------------------------")
-    print("Testing similarity...")
-    # Test query
-    queries = ["What is this document about?", "What are the key topics covered?", "Who developed python?",
-               "Summarize the whole document"]
-    for query in queries:
+    if not is_data_preprocessed(file_path):
+        pre_processing(file_path)
+    while True:
+        query = input("\nEnter your query (or 'exit' to quit): ")
+        if query.lower() == "exit":
+            print(f"We are done with this file: {file_path}.")
+            break
         print(f"\n🔍 Query: {query}")
-        query_embedding = generate_embeddings([query])[0]
-        similar_chunks = search_similar(index, query_embedding, chunks, k=5)
+        ranked_chunks = ranking_chunks(query, file_path, top_k=5)
 
-        answer = generate_answer(query, similar_chunks)
-        print("\n🤖 Answer:\n")
+        answer = generate_answer(query, ranked_chunks)
+        print("\n🤖 Yeah! got it:\n")
         print(answer)
 
 
 if __name__ == "__main__":
-    file_path = "./data/Python_Tutorial_EDIT.pdf"
-    rag_pipeline(file_path)
+    sys_file_paths = sys.argv[1:]  # Get file paths from command line arguments
+    if len(sys_file_paths) == 0:
+        sys_file_paths = input("Please enter the file paths (comma separated): ").split(",")
+    for sys_file_path in sys_file_paths:
+        rag_pipeline(sys_file_path)

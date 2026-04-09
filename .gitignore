@@ -27,3 +27,4 @@ wheels/
 # testing data
 test_data/
 data/
+model/

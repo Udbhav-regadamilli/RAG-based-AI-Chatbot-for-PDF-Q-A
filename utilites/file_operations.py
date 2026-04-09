@@ -1,4 +1,7 @@
 import fitz  # PyMuPDF
+import pickle
+import faiss
+import os
 
 def extract_text_from_pdf(file_path: str) -> str:
     """
@@ -22,3 +25,37 @@ def extract_text_from_pdf(file_path: str) -> str:
         text += page_text + "\n"
 
     return text
+
+
+def save_index(index, chunks, path):
+    # Extract clean filename
+    filename = os.path.basename(path)
+    filename = os.path.splitext(filename)[0]
+
+    # Ensure model directory exists
+    os.makedirs("./model", exist_ok=True)
+
+    # Save FAISS index
+    faiss.write_index(index, f"./model/{filename}.index")
+
+    # Save chunks
+    with open(f"./model/{filename}.pkl", "wb") as f:
+        pickle.dump(chunks, f)
+
+    print(f"✅ Saved index for {filename}")
+
+
+def load_index(path="faiss_index"):
+    # Extract clean filename
+    filename = os.path.basename(path)
+    filename = os.path.splitext(filename)[0]
+    try:
+        index = faiss.read_index(f"./model/{filename}.index")
+
+        with open(f"./model/{filename}.pkl", "rb") as f:
+            chunks = pickle.load(f)
+
+        return index, chunks
+    except Exception as e:
+        print(f"Error loading index: {e}")
+        return None, None
