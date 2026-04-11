@@ -26,17 +26,17 @@
 
 ```mermaid
 flowchart TD
-    A[PDF Input] --> B[Text Extraction (PyMuPDF)]
-    B --> C[Chunking (Sentence Windows)]
-    C --> D[Embedding Model (MiniLM)]
-    D --> E[FAISS Index]
+    A["PDF Input"] --> B["Text Extraction - PyMuPDF"]
+    B --> C["Chunking - Sentence Windows"]
+    C --> D["Embedding Model - MiniLM"]
+    D --> E["FAISS Index"]
     
-    Q[User Query] --> QE[Query Embedding]
-    QE --> R[Similarity Search (Top-K)]
-    R --> RR[Reranking (Cross Encoder)]
-    RR --> CTX[Top Context Chunks]
-    CTX --> LLM[Ollama (llama3)]
-    LLM --> ANS[Final Answer]
+    Q["User Query"] --> QE["Query Embedding"]
+    QE --> R["Similarity Search - Top K"]
+    R --> RR["Reranking - Cross Encoder"]
+    RR --> CTX["Top Context Chunks"]
+    CTX --> LLM["Ollama - llama3"]
+    LLM --> ANS["Final Answer"]
 ```
 
 ---
