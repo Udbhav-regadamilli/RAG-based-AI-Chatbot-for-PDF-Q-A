@@ -1,132 +1,226 @@
-# RAG PDF Q&A Pipeline
+# 🚀 RAG PDF Q&A Pipeline
 
-A Retrieval-Augmented Generation (RAG) system that:
-- Extracts text from PDFs using PyMuPDF
-- Chunks text into overlapping sentence windows
-- Generates embeddings with sentence-transformers
-- Indexes embeddings with FAISS for fast similarity search
-- Reranks retrieved chunks using a cross-encoder model
-- Answers user questions using Ollama (llama3) based on retrieved context
+![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)
+![FAISS](https://img.shields.io/badge/FAISS-Vector%20Search-green)
+![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-orange)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
-## Project Structure
+> A high-performance **Retrieval-Augmented Generation (RAG)** system to query PDFs using local LLMs.
 
-- `main.py` - Main pipeline that accepts PDF file paths as command-line arguments
-- `utilites/file_operations.py` - PDF text extraction using PyMuPDF (fitz)
-- `utilites/rag_operations.py` - Sentence-based chunking, embedding generation, FAISS indexing, similarity search, and chunk reranking
-- `utilites/qa.py` - Answer generation using Ollama with llama3 model
-- `data/` - Sample PDF files for demonstration
+---
 
-## Requirements
+## ✨ Features
 
-- Python 3.12+
-- Ollama running locally on `http://localhost:11434` with the `llama3` model available
+- 📄 PDF text extraction using PyMuPDF  
+- ✂️ Smart sentence-based chunking with overlap  
+- 🧠 Embeddings using Sentence Transformers  
+- ⚡ FAISS-powered similarity search  
+- 🎯 Cross-encoder reranking for accuracy  
+- 🤖 Local LLM inference via Ollama (`llama3`)  
+- 💾 Caching for fast repeated queries  
 
-## Install
+---
 
-This repository includes `pyproject.toml` and `uv.lock`.
+## 🧱 Architecture
 
-### Option 1: using uv (recommended)
+```mermaid
+flowchart TD
+    A[PDF Input] --> B[Text Extraction (PyMuPDF)]
+    B --> C[Chunking (Sentence Windows)]
+    C --> D[Embedding Model (MiniLM)]
+    D --> E[FAISS Index]
+    
+    Q[User Query] --> QE[Query Embedding]
+    QE --> R[Similarity Search (Top-K)]
+    R --> RR[Reranking (Cross Encoder)]
+    RR --> CTX[Top Context Chunks]
+    CTX --> LLM[Ollama (llama3)]
+    LLM --> ANS[Final Answer]
+```
 
-```powershell
+---
+
+## 📁 Project Structure
+
+```
+.
+├── main.py
+├── utilites/
+│   ├── file_operations.py
+│   ├── pre_processing.py
+│   ├── rag_operations.py
+│   └── qa.py
+├── data/
+├── model/
+```
+
+---
+
+## ⚙️ Requirements
+
+- Python 3.12+  
+- Ollama running locally (`http://localhost:11434`)  
+- `llama3` model installed  
+
+---
+
+## 🚀 Installation
+
+### Option 1: Using `uv` (Recommended)
+
+```bash
 uv sync
 ```
 
-### Option 2: using pip
+### Option 2: Using `pip`
 
-```powershell
+```bash
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1   # Windows
 pip install -U pip
 pip install -e .
 ```
 
-> Notes:
-> - Dependencies are specified in `pyproject.toml`
-> - NLTK tokenizer data (`punkt_tab`) is downloaded automatically at runtime by `utilites/rag_operations.py`
-> - Sentence-transformers and cross-encoder models are downloaded on first use
+---
 
-## Environment Setup
+## 🧠 Setup Ollama
 
-Ensure Ollama is running locally:
-
-```powershell
+```bash
 ollama serve
 ```
 
-In another terminal, pull the llama3 model if not already available:
-
-```powershell
+```bash
 ollama pull llama3
 ```
 
-No additional `.env` file is required for this version.
+---
 
-## Run
+## ▶️ Usage
 
-Run the pipeline with one or more PDF file paths as arguments:
+### Run with single PDF
 
-```powershell
-python .\main.py ".\data\Python_Tutorial_EDIT.pdf"
+```bash
+python .\main.py ".\data\sample.pdf"
 ```
 
-Or process multiple PDFs:
+### Run with multiple PDFs
 
-```powershell
-python .\main.py ".\data\Python_Tutorial_EDIT.pdf" ".\data\Udbhav_Full_Stack_Resume.pdf"
+```bash
+python .\main.py ".\data\a.pdf" ".\data\b.pdf"
 ```
 
-The script will process each file sequentially and present an interactive prompt for each PDF where you can ask questions.
+### Interactive mode
 
-## Pipeline Overview
+```bash
+python .\main.py
+```
 
-For each PDF file provided:
+---
 
-1. **Extract** - Extracts all text from the PDF using PyMuPDF
-2. **Chunk** - Splits text into sentence-based chunks (`chunk_size=5`, `overlap=1`)
-3. **Embed** - Generates embeddings for each chunk using `all-MiniLM-L6-v2` model from sentence-transformers
-4. **Index** - Builds a FAISS L2 index for fast similarity search
-5. **Query Loop** - For each user query:
-   - Generates embedding for the query
-   - Retrieves top-10 similar chunks using FAISS
-   - Reranks the top-10 chunks using `cross-encoder/ms-marco-MiniLM-L-6-v2`
-   - Selects top-5 reranked chunks
-   - Generates answer using Ollama (llama3) with the context and query
+## 💬 Example Query
 
-## Troubleshooting
+```text
+Q: What are the main topics in this document?
+A: The document covers...
+```
 
-- **Connection refused on port 11434:**
-  - Ensure Ollama is running: `ollama serve` in a separate terminal
-  - Check if llama3 model is available: `ollama pull llama3`
+---
 
-- **NLTK tokenizer errors:**
-  - Rerun the script; it automatically downloads `punkt_tab` on first use
+## ⚡ How It Works
 
-- **Embedding model download errors:**
-  - Check internet connection; sentence-transformers downloads models on first use
-  - Models are cached locally after first download
+### 🔹 Preprocessing (One-time)
 
-- **FAISS import fails:**
-  - Ensure `faiss-cpu` is installed: `pip install faiss-cpu>=1.13.2`
+- Extract text from PDF  
+- Chunk into sentences (5 size, 1 overlap)  
+- Generate embeddings (`all-MiniLM-L6-v2`)  
+- Store FAISS index  
 
-- **Memory errors with large PDFs:**
-  - The entire PDF is processed in memory; try with smaller PDFs first
-  - Adjust `chunk_size` and `overlap` in `rag_operations.py` if needed
+### 🔹 Query Pipeline
 
-## Limitations
+- Embed query  
+- Retrieve Top-K chunks  
+- Rerank using cross-encoder  
+- Pass context to LLM  
+- Generate final answer  
 
-- Script-style interface (not a packaged service/API)
-- Interactive query loop per PDF (one file at a time)
-- FAISS index rebuilt on every run (no persistence)
-- Entire PDF must fit in memory
-- Fixed chunking parameters and model selection
+---
 
-## Future Improvements
+## 📊 Performance Notes
 
-- Batch query input from file instead of interactive loop
-- Persist FAISS index to disk for faster subsequent runs
-- Add tests for chunking, retrieval quality, and answer accuracy
-- Improve answer source attribution with page/chunk references
-- Support for other LLM backends (Ollama alternatives, API-based models)
-- Configurable chunking strategy and model selection
-- Streaming responses for long answers
-- Multi-document context aggregation
+- ⚡ First run slower (model downloads ~100MB)  
+- 🚀 Subsequent runs are fast (cached)  
+- 🧠 Works fully offline (local LLM)  
+
+---
+
+## 🛠 Troubleshooting
+
+### Ollama not running
+
+```bash
+ollama serve
+```
+
+### Model missing
+
+```bash
+ollama pull llama3
+```
+
+### FAISS error
+
+```bash
+pip install faiss-cpu>=1.13.2
+```
+
+---
+
+## ⚠️ Limitations
+
+- Single-threaded processing  
+- Entire PDF loaded in memory  
+- Fixed chunking strategy  
+- CLI-only interaction  
+
+---
+
+## 🔮 Future Enhancements
+
+- ✅ Web UI (React + FastAPI)  
+- ✅ Multi-document search  
+- ✅ Streaming responses  
+- ✅ Metadata + source attribution  
+- ✅ Parallel processing  
+- ✅ Configurable models  
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, open an issue first.
+
+---
+
+## 📜 License
+
+MIT License
+
+---
+
+## ⭐ Show Your Support
+
+If you like this project:
+
+- ⭐ Star the repo  
+- 🍴 Fork it  
+- 🧠 Share with others  
+
+---
+
+## 👨‍💻 Author
+
+Built by **Udbhav**  
+Backend Developer | AI Enthusiast
+
+---
