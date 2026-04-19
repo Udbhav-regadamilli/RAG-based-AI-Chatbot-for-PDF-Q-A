@@ -1,4 +1,4 @@
-# 🚀 RAG PDF Q&A Pipeline
+﻿# 🚀 RAG PDF Q&A Pipeline
 
 ![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)
 ![FAISS](https://img.shields.io/badge/FAISS-Vector%20Search-green)
@@ -12,13 +12,13 @@
 
 ## ✨ Features
 
-- 📄 PDF text extraction using PyMuPDF  
-- ✂️ Smart sentence-based chunking with overlap  
-- 🧠 Embeddings using Sentence Transformers  
-- ⚡ FAISS-powered similarity search  
-- 🎯 Cross-encoder reranking for accuracy  
-- 🤖 Local LLM inference via Ollama (`llama3`)  
-- 💾 Caching for fast repeated queries  
+- 📄 PDF text extraction using PyMuPDF
+- ✂️ Smart sentence-based chunking with overlap
+- 🧠 Embeddings using Sentence Transformers
+- ⚡ FAISS-powered similarity search
+- 🎯 Cross-encoder reranking for accuracy
+- 🤖 Local LLM inference via Ollama (`llama3`)
+- 💾 Caching for fast repeated queries
 
 ---
 
@@ -26,17 +26,17 @@
 
 ```mermaid
 flowchart TD
-    A["PDF Input"] --> B["Text Extraction - PyMuPDF"]
-    B --> C["Chunking - Sentence Windows"]
-    C --> D["Embedding Model - MiniLM"]
-    D --> E["FAISS Index"]
+    A[PDF Input] --> B[Text Extraction (PyMuPDF)]
+    B --> C[Chunking (Sentence Windows)]
+    C --> D[Embedding Model (MiniLM)]
+    D --> E[FAISS Index]
     
-    Q["User Query"] --> QE["Query Embedding"]
-    QE --> R["Similarity Search - Top K"]
-    R --> RR["Reranking - Cross Encoder"]
-    RR --> CTX["Top Context Chunks"]
-    CTX --> LLM["Ollama - llama3"]
-    LLM --> ANS["Final Answer"]
+    Q[User Query] --> QE[Query Embedding]
+    QE --> R[Similarity Search (Top-K)]
+    R --> RR[Reranking (Cross Encoder)]
+    RR --> CTX[Top Context Chunks]
+    CTX --> LLM[Ollama (llama3)]
+    LLM --> ANS[Final Answer]
 ```
 
 ---
@@ -59,9 +59,9 @@ flowchart TD
 
 ## ⚙️ Requirements
 
-- Python 3.12+  
-- Ollama running locally (`http://localhost:11434`)  
-- `llama3` model installed  
+- Python 3.12+
+- Ollama running locally (`http://localhost:11434`)
+- `llama3` model installed
 
 ---
 
@@ -131,26 +131,26 @@ A: The document covers...
 
 ### 🔹 Preprocessing (One-time)
 
-- Extract text from PDF  
-- Chunk into sentences (5 size, 1 overlap)  
-- Generate embeddings (`all-MiniLM-L6-v2`)  
-- Store FAISS index  
+- Extract text from PDF
+- Chunk into sentences (5 size, 1 overlap)
+- Generate embeddings (`all-MiniLM-L6-v2`)
+- Store FAISS index
 
 ### 🔹 Query Pipeline
 
-- Embed query  
-- Retrieve Top-K chunks  
-- Rerank using cross-encoder  
-- Pass context to LLM  
-- Generate final answer  
+- Embed query
+- Retrieve Top-K chunks
+- Rerank using cross-encoder
+- Pass context to LLM
+- Generate final answer
 
 ---
 
 ## 📊 Performance Notes
 
-- ⚡ First run slower (model downloads ~100MB)  
-- 🚀 Subsequent runs are fast (cached)  
-- 🧠 Works fully offline (local LLM)  
+- ⚡ First run slower (model downloads ~100MB)
+- 🚀 Subsequent runs are fast (cached)
+- 🧠 Works fully offline (local LLM)
 
 ---
 
@@ -178,21 +178,21 @@ pip install faiss-cpu>=1.13.2
 
 ## ⚠️ Limitations
 
-- Single-threaded processing  
-- Entire PDF loaded in memory  
-- Fixed chunking strategy  
-- CLI-only interaction  
+- Single-threaded processing
+- Entire PDF loaded in memory
+- Fixed chunking strategy
+- CLI-only interaction
 
 ---
 
 ## 🔮 Future Enhancements
 
-- ✅ Web UI (React + FastAPI)  
-- ✅ Multi-document search  
-- ✅ Streaming responses  
-- ✅ Metadata + source attribution  
-- ✅ Parallel processing  
-- ✅ Configurable models  
+- ✅ Web UI (React + FastAPI)
+- ✅ Multi-document search
+- ✅ Streaming responses
+- ✅ Metadata + source attribution
+- ✅ Parallel processing
+- ✅ Configurable models
 
 ---
 
@@ -212,9 +212,9 @@ MIT License
 
 If you like this project:
 
-- ⭐ Star the repo  
-- 🍴 Fork it  
-- 🧠 Share with others  
+- ⭐ Star the repo
+- 🍴 Fork it
+- 🧠 Share with others
 
 ---
 

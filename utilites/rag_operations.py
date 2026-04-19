@@ -1,9 +1,9 @@
-import nltk
-from sentence_transformers import SentenceTransformer, CrossEncoder, util
 import faiss
+import nltk
 import numpy as np
+from sentence_transformers import SentenceTransformer, CrossEncoder, util
 
-from utilites.file_operations import load_index
+from utilites.file_operations import load_index, load_bm25
 
 nltk.download('punkt_tab')
 # Load once
@@ -64,24 +64,14 @@ def create_faiss_index(embeddings):
     return index, embeddings_np
 
 
-def ranking_chunks(query, file_path, top_k=2):
-    """
-    Rerank retrieved chunks based on relevance to query
-    """
-
-    chunks = search_similar(query, file_path, top_k=10)
-
+def ranking_chunks(query, chunks, top_k=2):
     pairs = [[query, chunk] for chunk in chunks]
 
     scores = reranker.predict(pairs)
 
-    # Combine chunks with scores
     scored_chunks = list(zip(chunks, scores))
-
-    # Sort by score (descending)
     scored_chunks.sort(key=lambda x: x[1], reverse=True)
 
-    # Return top_k chunks
     return [chunk for chunk, _ in scored_chunks[:top_k]]
 
 
@@ -108,3 +98,30 @@ def search_similar(query, file_path, top_k=3):
     top_indices = scores.argsort(descending=True)[:top_k]
 
     return [sentences[i] for i in top_indices]
+
+
+def bm25_search(query, bm25, chunks, k=5):
+    scores = bm25.get_scores(query.lower().split())
+
+    top_indices = np.argsort(scores)[::-1][:k]
+
+    return [chunks[i] for i in top_indices]
+
+
+def hybrid_search(query, file_path, k=10):
+    index, chunks = load_index(file_path)
+    bm25 = load_bm25(file_path)
+
+    # --- Vector search ---
+    query_embedding = model.encode([query]).astype("float32")
+    distances, indices = index.search(query_embedding, k)
+
+    vector_results = [chunks[i] for i in indices[0]]
+
+    # --- BM25 search ---
+    bm25_results = bm25_search(query, bm25, chunks, k)
+
+    # --- Merge results ---
+    combined = list(dict.fromkeys(vector_results + bm25_results))
+
+    return combined
